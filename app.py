@@ -21,8 +21,8 @@ else:
     if user_input:
         with st.spinner("YAYVERA düşünüyor..."):
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
+                        model="llama-3.1-8b-instant",
+               
                     {"role": "system", "content": "Sen YAYVERA AI'sın. Türkçe, samimi ve yardımsever bir asistansın."},
                     {"role": "user", "content": user_input}
                 ]
