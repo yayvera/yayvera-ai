@@ -15,7 +15,7 @@ def ara_ve_cevapla(soru):
     arama = tavily_client.search(query=soru, max_results=5, include_answer=True)
     gercek_bilgi = arama.get("answer","") + "\n".join([r["content"][:400] for r in arama["results"]])
     prompt = f"Sen YAYVERA AI'sın. SADECE şu GERÇEK BİLGİYE göre cevap ver, ASLA UYDURMA. GERÇEK BİLGİ: {gercek_bilgi} SORU: {soru}"
-    chat = groq_client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role":"user","content":prompt}], temperature=0.1)
+    chat = groq_client.chat.completions.create(model="openai/gpt-oss-120b", messages=[{"role":"user","content":prompt}], temperature=0.1)
     return chat.choices[0].message.content
 
 soru = st.text_input("Sor bakalım:", "Çorum FK Iğdır FK maçı kaç kaç bitti?")
