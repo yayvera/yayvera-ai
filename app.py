@@ -1,99 +1,96 @@
 from PIL import Image
 import streamlit as st
-import os
+import google.generativeai as genai
 from groq import Groq
 from tavily import TavilyClient
+import io
 
 st.set_page_config(page_title="YAYVERA AI - Asla Uydurmaz", page_icon="⚽", layout="centered")
-
-st.title("⚽ YAYVERA AI - Asla Uydurmaz")
-st.caption("Bilgisayar, Telefon ve Tablet uyumlu - İnternete bağlı")
+st.title("⚽ YAYVERA AI")
+st.caption("Soru Sor + Fotoğraf Düzenle - Asla Uydurmaz")
 
 # --- API KEYLER ---
-# Streamlit secrets'dan alıyor, yoksa yan menüden soruyor
 groq_key = st.secrets.get("GROQ_API_KEY", "") if "GROQ_API_KEY" in st.secrets else ""
 tavily_key = st.secrets.get("TAVILY_API_KEY", "") if "TAVILY_API_KEY" in st.secrets else ""
+google_key = st.secrets.get("GOOGLE_API_KEY", "") if "GOOGLE_API_KEY" in st.secrets else ""
 
 with st.sidebar:
     st.header("⚙️ Ayarlar")
+    if not google_key:
+        google_key = st.text_input("GOOGLE_API_KEY (aistudio.google.com)", type="password")
     if not groq_key:
-        groq_key = st.text_input("Groq API Key (gsk_...)", type="password")
+        groq_key = st.text_input("GROQ_API_KEY", type="password")
     if not tavily_key:
-        tavily_key = st.text_input("Tavily API Key (tvly_...)", type="password")
+        tavily_key = st.text_input("TAVILY_API_KEY", type="password")
     st.markdown("---")
     st.write("gturan126@gmail.com")
-    st.markdown("[YAYVERA Link](https://yayvera-ai.streamlit.app)")
 
-# --- 1. SORU SORMA KISMI ---
-st.subheader("Sor bakalım:")
-soru = st.text_input("", placeholder="Örn: Çorum FK Iğdır FK maçı kaç kaç bitti?", label_visibility="collapsed")
-
+# --- 1. SORU SORMA ---
+st.subheader("1️⃣ Sor bakalım:")
+soru = st.text_input("soru", placeholder="Örn: Çorum FK maçı kaç kaç bitti?", label_visibility="collapsed")
 if st.button("Sor"):
-    if not soru:
-        st.warning("Bir soru yaz Gökhan!")
-    elif not groq_key or not tavily_key:
-        st.error("API keyleri ayarlardan gir!")
+    if not groq_key or not tavily_key:
+        st.error("Groq ve Tavily keyleri gir!")
     else:
-        with st.spinner("YAYVERA araştırıyor, asla uydurmuyor..."):
+        with st.spinner("Araştırıyor..."):
             try:
-                # 1. Tavily ile internetten ara
                 tavily = TavilyClient(api_key=tavily_key)
                 search = tavily.search(query=soru, search_depth="advanced", max_results=5)
                 context = "\n".join([r['content'] for r in search['results']])
-                
-                # 2. Groq ile cevap ver
                 client = Groq(api_key=groq_key)
-                prompt = f"""Sen YAYVERA AI'sın, asla uydurmazsın. Sadece aşağıdaki internet sonuçlarına göre cevap ver. Eğer bilgi yoksa 'Bilmiyorum' de, uydurma.
-                
-                İnternet Sonuçları:
-                {context}
-                
-                Soru: {soru}
-                Cevap (Türkçe, kısa ve net):"""
-                
-                completion = client.chat.completions.create(
-                    model="llama-3.1-8b-instant",
-                    messages=[{"role": "user", "content": prompt}]
-                )
-                cevap = completion.choices[0].message.content
-                st.success(cevap)
-                st.caption(f"Kaynak: {search['results'][0]['url'] if search['results'] else 'İnternet'}")
+                prompt = f"Sen YAYVERA AI'sın, asla uydurmazsın. Sadece şu internet sonuçlarına göre cevap ver:\n{context}\nSoru: {soru}"
+                comp = client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role":"user","content":prompt}])
+                st.success(comp.choices[0].message.content)
             except Exception as e:
-                st.error(f"Hata: {e}")
+                st.error(str(e))
 
-# --- 2. YENİ ÖZELLİK: FOTOĞRAF ARKA PLAN DEĞİŞTİRME ---
 st.markdown("---")
-st.subheader("📸 YAYVERA - Fotoğraf Arka Plan Değiştir")
-st.write("Fotoğrafını yükle, YAYVERA arka planı değiştirsin!")
 
-uploaded = st.file_uploader("Fotoğrafını yükle", type=["jpg","png","jpeg"], key="photo")
+# --- 2. SENİN İSTEDİĞİN: FOTO + YAZI ---
+st.subheader("2️⃣ 📸 Fotoğraf + Yazı = YAYVERA Yapar")
+st.write("Fotoğrafını yükle, ne istediğini yaz!")
 
-bg = st.selectbox("Arka plan seç", ["Çorum FK Stadyumu", "Çorum Kalesi", "Orman", "Deniz Manzarası", "Şehir"])
+uploaded = st.file_uploader("Fotoğraf yükle", type=["jpg","jpeg","png"])
+prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka planı deniz manzaralı yap, Maldivler olsun. Üstümdeki kıyafet aynı kalsın.\nVeya: Üstüme siyah takım elbise giydir, arka plan Çorum FK Stadyumu olsun.")
 
 if uploaded:
-    img = Image.open(uploaded)
-    st.image(img, caption="Senin fotoğrafın", width=350)
-    
-    if st.button("🎨 Arka Planı Değiştir!", type="primary"):
-        with st.spinner("YAYVERA arka planı değiştiriyor..."):
-            colors = {
-                "Çorum FK Stadyumu": (0, 128, 0),
-                "Çorum Kalesi": (139, 115, 85),
-                "Orman": (34, 139, 34),
-                "Deniz Manzarası": (30, 144, 255),
-                "Şehir": (70, 70, 70)
-            }
-            bg_color = colors.get(bg, (0,0,0))
-            # Yeni arka plan
-            new_img = Image.new("RGB", img.size, bg_color)
-            # Fotoğrafı ortaya küçült
-            w, h = img.size
-            scale = 0.75
-            small = img.resize((int(w*scale), int(h*scale)))
-            x = (w - small.size[0]) // 2
-            y = (h - small.size[1]) // 2
-            new_img.paste(small, (x, y))
-            
-            st.image(new_img, caption=f"YAYVERA yaptı! Arka plan: {bg}", width=350)
-            st.success(f"YAYVERA yaptı! ✅ Arka plan: {bg}")
-            st.balloons()
+    img = Image.open(uploaded).convert("RGB")
+    st.image(img, width=350, caption="Yüklediğin fotoğraf")
+
+if uploaded and prompt_text:
+    if st.button("✨ YAYVERA YAPSIN!", type="primary"):
+        if not google_key:
+            st.error("Google API Key gir! aistudio.google.com'dan ücretsiz al")
+        else:
+            with st.spinner("YAYVERA yapıyor... 15-20 saniye bekle..."):
+                try:
+                    genai.configure(api_key=google_key)
+                    model = genai.GenerativeModel("gemini-2.5-flash-image-preview")
+                    
+                    # Foto + Yazı gönder
+                    response = model.generate_content([prompt_text, img])
+                    
+                    # Resim var mı kontrol et
+                    new_image = None
+                    for part in response.candidates[0].content.parts:
+                        if part.inline_data is not None:
+                            image_data = part.inline_data.data
+                            new_image = Image.open(io.BytesIO(image_data))
+                            break
+                    
+                    if new_image:
+                        st.image(new_image, caption="YAYVERA yaptı! ✅", width=400)
+                        st.success("Oldu Gökhan! İşte istediğin gibi!")
+                        st.balloons()
+                        # İndirme butonu
+                        buf = io.BytesIO()
+                        new_image.save(buf, format="PNG")
+                        st.download_button("📥 İndir", buf.getvalue(), file_name="yayvera_yapti.png", mime="image/png")
+                    else:
+                        # Bazen text döner
+                        st.write(response.text)
+                        st.warning("Resim üretilemedi, promptu daha net yaz. Örn: 'Keep the person same, change background to beach'")
+
+                except Exception as e:
+                    st.error(f"Hata: {e}")
+                    st.info("Model: gemini-2.5-flash-image-preview - API key doğru mu kontrol et")
