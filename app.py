@@ -21,7 +21,7 @@ else:
     if user_input:
         with st.spinner("YAYVERA düşünüyor..."):
             response = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
                 messages=[
                     {"role": "system", "content": "Sen YAYVERA AI'sın. Türkçe, samimi ve yardımsever bir asistansın."},
                     {"role": "user", "content": user_input}
