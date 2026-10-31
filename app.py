@@ -49,7 +49,7 @@ st.subheader("2️⃣ 📸 YAYVERA KURŞUN - Fotoğraf Yapar")
 st.write("Fotoğrafını yükle, ne istediğini yaz, YAYVERA sıfırdan yapsın!")
 
 uploaded = st.file_uploader("Fotoğraf yükle (isteğe bağlı)", type=["jpg","jpeg","png"])
-prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka plan Maldivler deniz manzarası, üzerinde siyah takım elbise, Çorum FK Stadyumunda\nÖrn: Sarışın bir adam, arkasında deniz")
+prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka plan Maldivler deniz manzarası, üzerinde siyah takım elbise, Çorum FK Stadyumunda")
 
 if uploaded:
     img = Image.open(uploaded).convert("RGB")
@@ -57,18 +57,16 @@ if uploaded:
 
 if prompt_text:
     if st.button("✨ YAYVERA KURŞUN YAPSIN!", type="primary"):
-        with st.spinner("YAYVERA kurşun yapıyor... yoğunluk varsa tekrar dene..."):
+        with st.spinner("YAYVERA kurşun yapıyor..."):
             try:
                 encoded = urllib.parse.quote(prompt_text)
                 seed = random.randint(1, 999999)
-                image_url_flux = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=flux&nologo=true&seed={seed}&enhance=true"
-                image_url_turbo = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
+                image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
                 
-                st.image(image_url_flux, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
+                st.image(image_url, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
                 st.success("Oldu Gökhan!")
                 st.balloons()
-                st.markdown(f"[📥 İndir]({image_url_flux}) | Olmazsa: [Turbo ile dene]({image_url_turbo})")
-                st.caption("Yoğunluk olursa F5 yapıp 10 sn sonra tekrar dene.")
+                st.markdown(f"[📥 Resmi İndir]({image_url})")
 
             except Exception as e:
                 st.error(f"Hata: {e}")
