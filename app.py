@@ -1,99 +1,75 @@
-from PIL import Image
-import streamlit as st
+import streamlit as st, urllib.parse, random, requests, base64, io
+from PIL import Image, ImageDraw, ImageFont
 from groq import Groq
 from tavily import TavilyClient
-import urllib.parse
-import random
-import requests
-import base64
-import io
 
-st.set_page_config(page_title="YAYVERA AI - Asla Uydurmaz", page_icon="⚽", layout="centered")
-st.title("⚽ YAYVERA AI")
-st.caption("Soru Sor + Fotoğraf Yap - YAYVERA Kurşun!")
+st.set_page_config(page_title="YAYVERA AI", page_icon="💪", layout="wide")
+if 'hak' not in st.session_state: st.session_state['hak'] = 999
+if 'ai_image' not in st.session_state: st.session_state['ai_image'] = None
 
-groq_key = st.secrets.get("GROQ_API_KEY", "") if "GROQ_API_KEY" in st.secrets else ""
-tavily_key = st.secrets.get("TAVILY_API_KEY", "") if "TAVILY_API_KEY" in st.secrets else ""
-pollinations_token = st.secrets.get("POLLINATIONS_TOKEN", "") if "POLLINATIONS_TOKEN" in st.secrets else ""
+groq_key = st.secrets["GROQ_API_KEY"]
+tavily_key = st.secrets["TAVILY_API_KEY"]
+polli_token = st.secrets.get("POLLINATIONS_TOKEN","")
 
-with st.sidebar:
-    st.header("⚙️ Ayarlar")
-    st.write("gturan126@gmail.com")
-    if pollinations_token:
-        st.success("✅ Limitsiz Aktif!")
+st.title("💪 YAYVERA AI")
+st.caption(f"Kalan hakkın: {st.session_state['hak']} | İstediğin her şeyi yapar!")
 
-st.subheader("1️⃣ Sor bakalım:")
-soru = st.text_input("soru", placeholder="Örn: Çorum FK maçı kaç kaç bitti?", label_visibility="collapsed")
-if st.button("Sor"):
-    if not groq_key or not tavily_key:
-        st.error("Groq ve Tavily keyleri gir!")
-    else:
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("1️⃣ Soru Sor")
+    soru = st.text_input("Sor", placeholder="Çorum FK maçı?", label_visibility="collapsed")
+    if st.button("Sor", use_container_width=True):
         with st.spinner("Araştırıyor..."):
-            try:
-                tavily = TavilyClient(api_key=tavily_key)
-                search = tavily.search(query=soru, search_depth="advanced", max_results=5)
-                context = "\n".join([r['content'] for r in search['results']])
-                client = Groq(api_key=groq_key)
-                prompt = f"Sen YAYVERA AI'sın, asla uydurmazsın. Sadece şu internet sonuçlarına göre cevap ver:\n{context}\nSoru: {soru}"
-                comp = client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role":"user","content":prompt}])
-                st.success(comp.choices[0].message.content)
-            except Exception as e:
-                st.error(str(e))
+            tavily = TavilyClient(api_key=tavily_key)
+            search = tavily.search(query=soru, max_results=5)
+            context = "\n".join([r['content'] for r in search['results']])
+            client = Groq(api_key=groq_key)
+            comp = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"user","content":f"{context}\nSoru:{soru}"}])
+            st.success(comp.choices[0].message.content)
 
-st.markdown("---")
-st.subheader("2️⃣ 📸 YAYVERA KURŞUN - Fotoğraf Yapar")
-st.write("Yüzünü koruyarak yapar!")
+with col2:
+    st.subheader("2️⃣ Fotoğraf Yap")
+    uploaded = st.file_uploader("Fotoğraf yükle", type=["jpg","png","jpeg"], label_visibility="collapsed")
+    if uploaded: st.image(uploaded, width=200)
 
-uploaded = st.file_uploader("Fotoğraf yükle", type=["jpg","jpeg","png"])
-prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka plan Maldivler, üzerinde siyah takım elbise, Çorum FK Stadyumunda")
+    prompt = st.text_area("Nasıl olsun?", placeholder="Örn: beni kaslı yap, Maldivler'de takım elbiseli, Çorum FK formasıyla...", height=100)
+    yazi = st.text_input("Üzerine yazı (isteğe bağlı)", placeholder="Örn: VAZGEÇME!")
+    
+    if st.button(f"✨ YAP ({st.session_state['hak']} hak kaldı)", type="primary", use_container_width=True):
+        if not prompt: st.warning("Ne istediğini yaz!")
+        elif st.session_state['hak'] <= 0: st.error("Hakkın bitti! İleride burası paralı olacak.")
+        else:
+            face = ""
+            if uploaded:
+                try:
+                    buf = io.BytesIO(); Image.open(uploaded).convert("RGB").save(buf, format="JPEG")
+                    img_str = base64.b64encode(buf.getvalue()).decode()
+                    client = Groq(api_key=groq_key)
+                    v = client.chat.completions.create(model="meta-llama/llama-4-scout-17b-16e-instruct", messages=[{"role":"user","content":[{"type":"text","text":"Describe this person face hair beard detailed"},{"type":"image_url","image_url":{"url":f"data:image/jpeg;base64,{img_str}"}}]}])
+                    face = v.choices[0].message.content + ", "
+                except: face = "same person same face, "
 
-if uploaded:
-    img = Image.open(uploaded).convert("RGB")
-    st.image(img, width=350, caption="Referans sensin!")
-
-if prompt_text:
-    if st.button("✨ YAYVERA KURŞUN YAPSIN!", type="primary"):
-        with st.spinner("Yüzünü tanıyor, sonra çiziyor..."):
-            try:
-                final_prompt = prompt_text
-                
-                # Eğer fotoğraf yüklendiyse, Groq Vision ile yüzü tarif et
-                if uploaded and groq_key:
-                    try:
-                        # Fotoğrafı base64 yap
-                        buffered = io.BytesIO()
-                        img.save(buffered, format="JPEG")
-                        img_str = base64.b64encode(buffered.getvalue()).decode()
-                        
-                        client = Groq(api_key=groq_key)
-                        vision_resp = client.chat.completions.create(
-                            model="meta-llama/llama-4-scout-17b-16e-instruct",
-                            messages=[{
-                                "role": "user",
-                                "content": [
-                                    {"type": "text", "text": "Bu fotoğraftaki adamı detaylı tarif et: saç, sakal, yüz şekli, ten rengi, yaş. Sadece tarif, yorum yok."},
-                                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_str}"}}
-                                ]
-                            }]
-                        )
-                        face_desc = vision_resp.choices[0].message.content
-                        final_prompt = f"{face_desc} olan adam, {prompt_text}, photorealistic, ultra detailed, same face, keep identity"
-                        st.caption(f"Yüz tarifi: {face_desc}")
-                    except Exception as e:
-                        st.caption(f"Yüz okuma atlandı: {e}")
-                        final_prompt = f"Same man as reference, {prompt_text}"
-
-                encoded = urllib.parse.quote(final_prompt)
-                seed = random.randint(1, 999999)
-                image_url = f"https://gen.pollinations.ai/image/{encoded}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
-                headers = {"Authorization": f"Bearer {pollinations_token}"} if pollinations_token else {}
-                
-                response = requests.get(image_url, headers=headers, timeout=120)
-                if response.status_code == 200:
-                    st.image(response.content, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
-                    st.success("Oldu Gökhan! Bu sefer sensin!")
-                    st.balloons()
-                else:
-                    st.error(f"Hata {response.status_code}: {response.text[:500]}")
-            except Exception as e:
-                st.error(f"Hata: {e}")
+            full = face + prompt + ", photorealistic, keep face identity, 8k"
+            with st.spinner("YAYVERA yapıyor... 20 saniye"):
+                url = f"https://gen.pollinations.ai/image/{urllib.parse.quote(full)}?width=1024&height=1024&model=flux&seed={random.randint(1,999999)}&nologo=true"
+                r = requests.get(url, headers={"Authorization": f"Bearer {polli_token}"} if polli_token else {}, timeout=120)
+                if r.status_code == 200:
+                    img = Image.open(io.BytesIO(r.content)).convert("RGB")
+                    if yazi:
+                        draw = ImageDraw.Draw(img); W,H = img.size; fs = int(W*0.06)
+                        try: font = ImageFont.truetype("arial.ttf", fs)
+                        except: font = ImageFont.load_default()
+                        bbox = draw.textbbox((0,0), yazi, font=font); x = W//2-(bbox[2]-bbox[0])//2; y = H-(bbox[3]-bbox[1])-50
+                        draw.text((x+3,y+3), yazi, font=font, fill="black"); draw.text((x,y), yazi, font=font, fill="white")
+                    
+                    st.session_state['ai_image'] = img
+                    st.session_state['hak'] -= 1
+                    st.image(img, width=400)
+                    buf = io.BytesIO(); img.save(buf, format="JPEG")
+                    st.download_button("📥 İndir", buf.getvalue(), "yayvera.jpg", "image/jpeg", use_container_width=True)
+                    st.success(f"Bitti! Kalan: {st.session_state['hak']}")
+                else: st.error(r.text[:400])
+    
+    if st.session_state['ai_image'] is not None:
+        st.image(st.session_state['ai_image'], caption="Son oluşturulan", width=400)
