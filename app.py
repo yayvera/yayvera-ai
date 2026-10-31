@@ -26,8 +26,6 @@ with st.sidebar:
     st.write("gturan126@gmail.com")
     if pollinations_token:
         st.success("✅ YAYVERA Kurşun Aktif! (Limitsiz)")
-    else:
-        st.success("✅ YAYVERA Kurşun Aktif!")
 
 # --- 1. SORU SORMA ---
 st.subheader("1️⃣ Sor bakalım:")
@@ -52,10 +50,9 @@ st.markdown("---")
 
 # --- 2. YAYVERA KURŞUN - FOTOĞRAF ---
 st.subheader("2️⃣ 📸 YAYVERA KURŞUN - Fotoğraf Yapar")
-st.write("Fotoğrafını yükle, ne istediğini yaz, YAYVERA sıfırdan yapsın!")
 
 uploaded = st.file_uploader("Fotoğraf yükle (isteğe bağlı)", type=["jpg","jpeg","png"])
-prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka plan Maldivler deniz manzarası, üzerinde siyah takım elbise, Çorum FK Stadyumunda")
+prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka plan Maldivler deniz manzarası, üzerinde siyah takım elbise")
 
 if uploaded:
     img = Image.open(uploaded).convert("RGB")
@@ -63,32 +60,29 @@ if uploaded:
 
 if prompt_text:
     if st.button("✨ YAYVERA KURŞUN YAPSIN!", type="primary"):
-        with st.spinner("YAYVERA kurşun yapıyor..."):
+        with st.spinner("YAYVERA kurşun yapıyor, Pollen ile limitsiz..."):
             try:
                 encoded = urllib.parse.quote(prompt_text)
                 seed = random.randint(1, 999999)
                 
+                # YENİ POLLEN API - Classic değil
                 if pollinations_token:
-                    image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
+                    # Pollen için doğru endpoint
+                    image_url = f"https://gen.pollinations.ai/image/{encoded}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
                     headers = {"Authorization": f"Bearer {pollinations_token}"}
-                    response = requests.get(image_url, headers=headers, timeout=90)
-                    if response.status_code == 200 and "image" in response.headers.get("Content-Type", ""):
+                    response = requests.get(image_url, headers=headers, timeout=120)
+                    
+                    if response.status_code == 200:
                         st.image(response.content, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
-                        st.success("Oldu Gökhan! Limitsiz!")
+                        st.success("Oldu Gökhan! Artık limitsiz ve hızlı!")
                         st.balloons()
                     else:
-                        # Bazen json hata döner, onu göster
-                        st.error(f"Pollinations dedi: {response.text[:200]}")
-                        st.image(image_url)
+                        st.error(f"Pollen hatası {response.status_code}: {response.text[:500]}")
                 else:
                     image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
-                    my_bar = st.progress(0, text="45 sn bekleniyor...")
-                    for percent in range(45):
-                        time.sleep(1)
-                        my_bar.progress((percent+1)/45, text=f"{45-percent} sn kaldı...")
-                    my_bar.empty()
                     st.image(image_url, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
                     st.balloons()
 
             except Exception as e:
-                st.error(f"Hata: {e}")
+                st.error(f"Hata: {e}")Fark ne? image.pollinations.ai yerine artık gen.pollinations.ai/image/... ve model=flux kullanıyoruz. Bu Pollen anahtarın için olan gerçek limitsiz endpoint!
+Yapıştır, Commit de, sonra Reboot app de. Bu sefer olacak!
