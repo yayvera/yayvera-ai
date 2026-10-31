@@ -13,6 +13,7 @@ st.caption("Soru Sor + Fotoğraf Yap - YAYVERA Kurşun!")
 # --- API KEYLER ---
 groq_key = st.secrets.get("GROQ_API_KEY", "") if "GROQ_API_KEY" in st.secrets else ""
 tavily_key = st.secrets.get("TAVILY_API_KEY", "") if "TAVILY_API_KEY" in st.secrets else ""
+pollinations_token = st.secrets.get("POLLINATIONS_TOKEN", "") if "POLLINATIONS_TOKEN" in st.secrets else ""
 
 with st.sidebar:
     st.header("⚙️ Ayarlar")
@@ -22,7 +23,10 @@ with st.sidebar:
         tavily_key = st.text_input("TAVILY_API_KEY", type="password")
     st.markdown("---")
     st.write("gturan126@gmail.com")
-    st.success("✅ YAYVERA Kurşun Aktif!")
+    if pollinations_token:
+        st.success("✅ YAYVERA Kurşun Aktif! (Limitsiz)")
+    else:
+        st.success("✅ YAYVERA Kurşun Aktif!")
 
 # --- 1. SORU SORMA ---
 st.subheader("1️⃣ Sor bakalım:")
@@ -58,25 +62,30 @@ if uploaded:
 
 if prompt_text:
     if st.button("✨ YAYVERA KURŞUN YAPSIN!", type="primary"):
-        with st.spinner("YAYVERA kurşun yapıyor... 45 sn kuralı var..."):
+        with st.spinner("YAYVERA kurşun yapıyor..."):
             try:
                 encoded = urllib.parse.quote(prompt_text)
                 seed = random.randint(1, 999999)
-                image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
                 
-                # 45 sn geri sayım barı
-                progress_text = "Pollinations 45 sn kuralı için bekleniyor..."
-                my_bar = st.progress(0, text=progress_text)
-                for percent in range(45):
-                    time.sleep(1)
-                    my_bar.progress((percent+1)/45, text=f"{45-percent} saniye kaldı...")
-                my_bar.empty()
+                # Token varsa limitsiz ve hızlı, yoksa ücretsiz
+                if pollinations_token:
+                    image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}&token={pollinations_token}"
+                else:
+                    image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
+                    # Sadece tokensizken 45 sn bekle
+                    progress_text = "Pollinations 45 sn kuralı için bekleniyor..."
+                    my_bar = st.progress(0, text=progress_text)
+                    for percent in range(45):
+                        time.sleep(1)
+                        my_bar.progress((percent+1)/45, text=f"{45-percent} saniye kaldı...")
+                    my_bar.empty()
 
                 st.image(image_url, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
                 st.success("Oldu Gökhan!")
                 st.balloons()
                 st.markdown(f"[📥 Resmi İndir]({image_url})")
-                st.caption("Not: 45 saniyede 1 resim ücretsiz. Hızlı istersen Pollinations'a GitHub ile giriş yapıp anahtar alacağız.")
+                if not pollinations_token:
+                    st.caption("Not: 45 saniyede 1 resim ücretsiz. Limitsiz için token ekledik!")
 
             except Exception as e:
                 st.error(f"Hata: {e}")
