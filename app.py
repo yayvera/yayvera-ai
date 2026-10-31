@@ -4,6 +4,7 @@ from groq import Groq
 from tavily import TavilyClient
 import urllib.parse
 import random
+import time
 
 st.set_page_config(page_title="YAYVERA AI - Asla Uydurmaz", page_icon="⚽", layout="centered")
 st.title("⚽ YAYVERA AI")
@@ -57,16 +58,25 @@ if uploaded:
 
 if prompt_text:
     if st.button("✨ YAYVERA KURŞUN YAPSIN!", type="primary"):
-        with st.spinner("YAYVERA kurşun yapıyor..."):
+        with st.spinner("YAYVERA kurşun yapıyor... 45 sn kuralı var..."):
             try:
                 encoded = urllib.parse.quote(prompt_text)
                 seed = random.randint(1, 999999)
                 image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
                 
+                # 45 sn geri sayım barı
+                progress_text = "Pollinations 45 sn kuralı için bekleniyor..."
+                my_bar = st.progress(0, text=progress_text)
+                for percent in range(45):
+                    time.sleep(1)
+                    my_bar.progress((percent+1)/45, text=f"{45-percent} saniye kaldı...")
+                my_bar.empty()
+
                 st.image(image_url, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
                 st.success("Oldu Gökhan!")
                 st.balloons()
                 st.markdown(f"[📥 Resmi İndir]({image_url})")
+                st.caption("Not: 45 saniyede 1 resim ücretsiz. Hızlı istersen Pollinations'a GitHub ile giriş yapıp anahtar alacağız.")
 
             except Exception as e:
                 st.error(f"Hata: {e}")
