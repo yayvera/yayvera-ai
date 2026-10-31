@@ -3,7 +3,7 @@ from groq import Groq
 from tavily import TavilyClient
 
 st.set_page_config(page_title="YAYVERA AI", page_icon="⚽")
-st.title("⚽ YAYVERA AI - Gerçek Futbol Bilgisi")
+st.title("⚽ YAYVERA AI - Asla Uydurmaz")
 
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 TAVILY_API_KEY = st.secrets["TAVILY_API_KEY"]
