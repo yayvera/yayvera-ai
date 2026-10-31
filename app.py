@@ -4,14 +4,12 @@ from groq import Groq
 from tavily import TavilyClient
 import urllib.parse
 import random
-import time
 import requests
 
 st.set_page_config(page_title="YAYVERA AI - Asla Uydurmaz", page_icon="⚽", layout="centered")
 st.title("⚽ YAYVERA AI")
 st.caption("Soru Sor + Fotoğraf Yap - YAYVERA Kurşun!")
 
-# --- API KEYLER ---
 groq_key = st.secrets.get("GROQ_API_KEY", "") if "GROQ_API_KEY" in st.secrets else ""
 tavily_key = st.secrets.get("TAVILY_API_KEY", "") if "TAVILY_API_KEY" in st.secrets else ""
 pollinations_token = st.secrets.get("POLLINATIONS_TOKEN", "") if "POLLINATIONS_TOKEN" in st.secrets else ""
@@ -22,12 +20,10 @@ with st.sidebar:
         groq_key = st.text_input("GROQ_API_KEY", type="password")
     if not tavily_key:
         tavily_key = st.text_input("TAVILY_API_KEY", type="password")
-    st.markdown("---")
     st.write("gturan126@gmail.com")
     if pollinations_token:
-        st.success("✅ YAYVERA Kurşun Aktif! (Limitsiz)")
+        st.success("✅ Limitsiz Aktif!")
 
-# --- 1. SORU SORMA ---
 st.subheader("1️⃣ Sor bakalım:")
 soru = st.text_input("soru", placeholder="Örn: Çorum FK maçı kaç kaç bitti?", label_visibility="collapsed")
 if st.button("Sor"):
@@ -47,12 +43,9 @@ if st.button("Sor"):
                 st.error(str(e))
 
 st.markdown("---")
-
-# --- 2. YAYVERA KURŞUN - FOTOĞRAF ---
 st.subheader("2️⃣ 📸 YAYVERA KURŞUN - Fotoğraf Yapar")
-
 uploaded = st.file_uploader("Fotoğraf yükle (isteğe bağlı)", type=["jpg","jpeg","png"])
-prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka plan Maldivler deniz manzarası, üzerinde siyah takım elbise")
+prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Maldivler sahilinde takım elbiseli adam")
 
 if uploaded:
     img = Image.open(uploaded).convert("RGB")
@@ -60,29 +53,18 @@ if uploaded:
 
 if prompt_text:
     if st.button("✨ YAYVERA KURŞUN YAPSIN!", type="primary"):
-        with st.spinner("YAYVERA kurşun yapıyor, Pollen ile limitsiz..."):
+        with st.spinner("YAYVERA yapıyor..."):
             try:
                 encoded = urllib.parse.quote(prompt_text)
                 seed = random.randint(1, 999999)
-                
-                # YENİ POLLEN API - Classic değil
-                if pollinations_token:
-                    # Pollen için doğru endpoint
-                    image_url = f"https://gen.pollinations.ai/image/{encoded}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
-                    headers = {"Authorization": f"Bearer {pollinations_token}"}
-                    response = requests.get(image_url, headers=headers, timeout=120)
-                    
-                    if response.status_code == 200:
-                        st.image(response.content, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
-                        st.success("Oldu Gökhan! Artık limitsiz ve hızlı!")
-                        st.balloons()
-                    else:
-                        st.error(f"Pollen hatası {response.status_code}: {response.text[:500]}")
-                else:
-                    image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
-                    st.image(image_url, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
+                image_url = f"https://gen.pollinations.ai/image/{encoded}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
+                headers = {"Authorization": f"Bearer {pollinations_token}"}
+                response = requests.get(image_url, headers=headers, timeout=120)
+                if response.status_code == 200:
+                    st.image(response.content, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
+                    st.success("Oldu Gökhan!")
                     st.balloons()
-
+                else:
+                    st.error(f"Hata {response.status_code}: {response.text[:500]}")
             except Exception as e:
-                st.error(f"Hata: {e}")Fark ne? image.pollinations.ai yerine artık gen.pollinations.ai/image/... ve model=flux kullanıyoruz. Bu Pollen anahtarın için olan gerçek limitsiz endpoint!
-Yapıştır, Commit de, sonra Reboot app de. Bu sefer olacak!
+                st.error(f"Hata: {e}")
