@@ -7,7 +7,7 @@ import random
 
 st.set_page_config(page_title="YAYVERA AI - Asla Uydurmaz", page_icon="⚽", layout="centered")
 st.title("⚽ YAYVERA AI")
-st.caption("Soru Sor + Fotoğraf Yap - Gemini YOK, YAYVERA Kurşun!")
+st.caption("Soru Sor + Fotoğraf Yap - YAYVERA Kurşun!")
 
 # --- API KEYLER ---
 groq_key = st.secrets.get("GROQ_API_KEY", "") if "GROQ_API_KEY" in st.secrets else ""
@@ -21,7 +21,7 @@ with st.sidebar:
         tavily_key = st.text_input("TAVILY_API_KEY", type="password")
     st.markdown("---")
     st.write("gturan126@gmail.com")
-    st.success("✅ Gemini Kaldırıldı! Artık anahtarsız!")
+    st.success("✅ YAYVERA Kurşun Aktif!")
 
 # --- 1. SORU SORMA ---
 st.subheader("1️⃣ Sor bakalım:")
@@ -44,12 +44,12 @@ if st.button("Sor"):
 
 st.markdown("---")
 
-# --- 2. YENİ: YAYVERA KURŞUN - ANAHTARSIZ FOTOĞRAF ---
-st.subheader("2️⃣ 📸 YAYVERA KURŞUN - Fotoğraf Yapar (Gemini YOK!)")
-st.write("Fotoğrafını yükle (referans için), ne istediğini yaz, YAYVERA sıfırdan yapsın!")
+# --- 2. YAYVERA KURŞUN - FOTOĞRAF ---
+st.subheader("2️⃣ 📸 YAYVERA KURŞUN - Fotoğraf Yapar")
+st.write("Fotoğrafını yükle, ne istediğini yaz, YAYVERA sıfırdan yapsın!")
 
 uploaded = st.file_uploader("Fotoğraf yükle (isteğe bağlı)", type=["jpg","jpeg","png"])
-prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka planı Maldivler deniz manzarası olsun, üzerinde siyah takım elbise olsun, Çorum FK Stadyumunda\nÖrn: Sarışın bir adam, arkasında deniz")
+prompt_text = st.text_area("Ne yapsın?", placeholder="Örn: Arka plan Maldivler deniz manzarası, üzerinde siyah takım elbise, Çorum FK Stadyumunda\nÖrn: Sarışın bir adam, arkasında deniz")
 
 if uploaded:
     img = Image.open(uploaded).convert("RGB")
@@ -57,18 +57,18 @@ if uploaded:
 
 if prompt_text:
     if st.button("✨ YAYVERA KURŞUN YAPSIN!", type="primary"):
-        with st.spinner("YAYVERA kurşun yapıyor... 10 saniye..."):
+        with st.spinner("YAYVERA kurşun yapıyor... yoğunluk varsa tekrar dene..."):
             try:
-                # Anahtarsız motor - Pollinations
                 encoded = urllib.parse.quote(prompt_text)
                 seed = random.randint(1, 999999)
-                image_url = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=flux&nologo=true&seed={seed}&enhance=true"
+                image_url_flux = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=flux&nologo=true&seed={seed}&enhance=true"
+                image_url_turbo = f"https://image.pollinations.ai/prompt/{encoded}?width=1024&height=1024&model=turbo&nologo=true&seed={seed}"
                 
-                st.image(image_url, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
-                st.success("Oldu Gökhan! Gemini yok, YAYVERA yaptı!")
+                st.image(image_url_flux, caption="YAYVERA KURŞUN yaptı! ✅", width=400)
+                st.success("Oldu Gökhan!")
                 st.balloons()
-                st.markdown(f"[📥 Resmi İndir]({image_url})")
-                st.info("Not: Bu model sıfırdan yapar. Yüklediğin fotoğrafın aynısını birebir düzenlemek için Gemini gibi bir modele ihtiyaç var. Şu anki hali anahtarsız ve sıfırdan üretiyor.")
+                st.markdown(f"[📥 İndir]({image_url_flux}) | Olmazsa: [Turbo ile dene]({image_url_turbo})")
+                st.caption("Yoğunluk olursa F5 yapıp 10 sn sonra tekrar dene.")
 
             except Exception as e:
                 st.error(f"Hata: {e}")
