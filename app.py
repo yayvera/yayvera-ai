@@ -1,23 +1,24 @@
-# DEBUG İÇİN - NEREDE TAKILIYOR GÖRELİM
 import streamlit as st
-import os
 from groq import Groq
 from tavily import TavilyClient
 
-st.set_page_config(page_title="YAYVERA DEBUG", page_icon="🚀")
-st.title("DEBUG MODU")
+st.set_page_config(page_title="YAYVERA AI", page_icon="⚽")
+st.title("⚽ YAYVERA AI - Gerçek Futbol Bilgisi")
 
-GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", "")
-TAVILY_API_KEY = st.secrets.get("TAVILY_API_KEY", "")
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+TAVILY_API_KEY = st.secrets["TAVILY_API_KEY"]
 
-st.write(f"Groq var mı? {'EVET' if GROQ_API_KEY else 'HAYIR'} - {GROQ_API_KEY[:10]}...")
-st.write(f"Tavily var mı? {'EVET' if TAVILY_API_KEY else 'HAYIR'} - {TAVILY_API_KEY[:10]}...")
+groq_client = Groq(api_key=GROQ_API_KEY)
+tavily_client = TavilyClient(api_key=TAVILY_API_KEY)
 
-if st.button("Tavily Test Et"):
-    try:
-        tavily = TavilyClient(api_key=TAVILY_API_KEY)
-        res = tavily.search("Şenol Güneş nereli", max_results=2)
-        st.success("Tavily çalışıyor!")
-        st.json(res)
-    except Exception as e:
-        st.error(f"Tavily HATASI: {e}")
+def ara_ve_cevapla(soru):
+    arama = tavily_client.search(query=soru, max_results=5, include_answer=True)
+    gercek_bilgi = arama.get("answer","") + "\n".join([r["content"][:400] for r in arama["results"]])
+    prompt = f"Sen YAYVERA AI'sın. SADECE şu GERÇEK BİLGİYE göre cevap ver, ASLA UYDURMA. GERÇEK BİLGİ: {gercek_bilgi} SORU: {soru}"
+    chat = groq_client.chat.completions.create(model="llama-3.1-8b-instant", messages=[{"role":"user","content":prompt}], temperature=0.1)
+    return chat.choices[0].message.content
+
+soru = st.text_input("Sor bakalım:", "Çorum FK Iğdır FK maçı kaç kaç bitti?")
+if st.button("Sor"):
+    with st.spinner("Gerçek kaynaklardan arıyorum..."):
+        st.success(ara_ve_cevapla(soru))
