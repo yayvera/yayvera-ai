@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw, ImageFont
 from groq import Groq
 from tavily import TavilyClient
 
-st.set_page_config(page_title="YAYVERA AI", page_icon="💪", layout="wide")
+st.set_page_config(page_title="BİLVERA", page_icon="💪", layout="wide")
 if 'hak' not in st.session_state: st.session_state['hak'] = 999
 if 'ai_image' not in st.session_state: st.session_state['ai_image'] = None
 
@@ -11,7 +11,7 @@ groq_key = st.secrets["GROQ_API_KEY"]
 tavily_key = st.secrets["TAVILY_API_KEY"]
 polli_token = st.secrets.get("POLLINATIONS_TOKEN","")
 
-st.title("💪 YAYVERA AI")
+st.title("💪 BİLVERA")
 st.caption(f"Kalan hakkın: {st.session_state['hak']} | İstediğin her şeyi yapar!")
 
 col1, col2 = st.columns(2)
@@ -51,7 +51,7 @@ with col2:
                 except: face = "same person same face, "
 
             full = face + prompt + ", photorealistic, keep face identity, 8k"
-            with st.spinner("YAYVERA yapıyor... 20 saniye"):
+            with st.spinner("BİLVERA yapıyor... 20 saniye"):
                 url = f"https://gen.pollinations.ai/image/{urllib.parse.quote(full)}?width=1024&height=1024&model=flux&seed={random.randint(1,999999)}&nologo=true"
                 r = requests.get(url, headers={"Authorization": f"Bearer {polli_token}"} if polli_token else {}, timeout=120)
                 if r.status_code == 200:
@@ -67,7 +67,7 @@ with col2:
                     st.session_state['hak'] -= 1
                     st.image(img, width=400)
                     buf = io.BytesIO(); img.save(buf, format="JPEG")
-                    st.download_button("📥 İndir", buf.getvalue(), "yayvera.jpg", "image/jpeg", use_container_width=True)
+                    st.download_button("📥 İndir", buf.getvalue(), "bilvera.jpg", "image/jpeg", use_container_width=True)
                     st.success(f"Bitti! Kalan: {st.session_state['hak']}")
                 else: st.error(r.text[:400])
     
