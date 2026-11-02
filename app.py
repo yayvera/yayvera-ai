@@ -12,7 +12,7 @@ tavily_key = st.secrets["TAVILY_API_KEY"]
 polli_token = st.secrets.get("POLLINATIONS_TOKEN","")
 
 st.title("💪 BİLVERA")
-st.caption(f"Kalan hakkın: {st.session_state['hak']} | İstediğin her şeyi yapar!")
+st.caption(f"Kalan hakkın: {st.session_state['hak']} | İstediğin her şeyi yapar! | İletişim: nturan125@gmail.com")
 
 col1, col2 = st.columns(2)
 
@@ -73,3 +73,6 @@ with col2:
     
     if st.session_state['ai_image'] is not None:
         st.image(st.session_state['ai_image'], caption="Son oluşturulan", width=400)
+
+st.divider()
+st.markdown("**BİLVERA** - İletişim: ("**BİLVERA** | © 2026")
