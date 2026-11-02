@@ -22,10 +22,18 @@ with col1:
     if st.button("Sor", use_container_width=True):
         with st.spinner("Araştırıyor..."):
             tavily = TavilyClient(api_key=tavily_key)
-            search = tavily.search(query=soru, max_results=5)
+            search = tavily.search(query=soru, max_results=5, search_depth="advanced", include_answer=True)
             context = "\n".join([r['content'] for r in search['results']])
             client = Groq(api_key=groq_key)
-            comp = client.chat.completions.create(model="openai/gpt-oss-20b", messages=[{"role":"user","content":f"{context}\nSoru:{soru}"}])
+            from datetime import datetime
+bugun = datetime.now().strftime("%d.%m.%Y")
+comp = client.chat.completions.create(
+    model="openai/gpt-oss-20b", 
+    messages=[
+        {"role":"system","content": f"Bugün {bugun}. Sana verilen internet sonuçlarını kullan. Döviz, altın, maç skoru gibi güncel konularda ASLA tahmin etme, sadece arama sonuçlarındaki güncel veriyi ver. Yanlışsa 'güncel veri bulamadım' de."},
+        {"role":"user","content":f"Arama Sonuçları:\n{context}\n\nSoru:{soru}"}
+    ]
+)
             st.success(comp.choices[0].message.content)
 
 with col2:
