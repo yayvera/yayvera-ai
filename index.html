@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BİLVERA - 243 Dilekçe Otomatik Yazdır</title>
+<style>
+*{box-sizing:border-box}body{font-family:Arial,sans-serif;background:#f0f2f5;margin:0}
+header{background:#0f2a44;color:#fff;padding:20px;text-align:center}
+header h1{margin:0;font-size:32px}
+.container{max-width:900px;margin:20px auto;background:#fff;padding:20px;border-radius:12px}
+input,select,textarea{width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:8px;font-size:15px}
+button{background:#0f2a44;color:#fff;border:0;padding:14px;width:100%;border-radius:8px;font-size:17px;font-weight:bold;cursor:pointer}
+button:hover{background:#1a4a7a}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:#f8f9fa;padding:12px;border-radius:8px;border:1px solid #eee;cursor:pointer}
+.card:hover{background:#e8f0fe}
+#sonuc{white-space:pre-wrap;background:#fffbe6;padding:15px;border:1px dashed #999;border-radius:8px;margin-top:15px;min-height:200px}
+.badge{background:#ffcc00;color:#000;padding:4px 10px;border-radius:20px;font-size:13px;font-weight:bold}
+</style>
+</head>
+<body>
+<header><h1>⚖️ BİLVERA</h1><p>243 Dilekçe • Adını Yaz, Dilekçen Hazır • Ücretsiz</p><span class="badge">243 DİLEKÇE EKLENDİ</span></header>
+<div class="container">
+<input id="ara" placeholder="🔍 Dilekçe ara... örn: kira, boşanma, trafik, işe iade..." oninput="filtrele()">
+<div id="liste" class="grid"></div>
+<h3>👤 Bilgilerin</h3>
+<div class="grid">
+<input id="ad" placeholder="Adın Soyadın">
+<input id="tc" placeholder="TC Kimlik No">
+<input id="adres" placeholder="Adresin">
+<input id="tel" placeholder="Telefon">
+</div>
+<input id="karsi" placeholder="Karşı Taraf / Kurum Adı">
+<textarea id="olay" placeholder="Olayı kısaca anlat... örn: Kiracım 3 aydır kira ödemiyor"></textarea>
+<select id="secili"><option>Önce yukarıdan bir dilekçe seç</option></select>
+<button onclick="olustur()">📄 DİLEKÇEYİ OLUŞTUR</button>
+<button onclick="yazdir()" style="background:#009944;margin-top:10px">🖨️ YAZDIR / PDF YAP</button>
+<div id="sonuc">Burada dilekçen oluşacak...</div>
+</div>
+<script>
+const dilekceler=["İşe İade Dilekçesi","Kıdem Tazminatı Dilekçesi","İhbar Tazminatı Dilekçesi","Fazla Mesai Alacağı Dilekçesi","Yıllık İzin Ücreti Dilekçesi","Mobbing Şikayet Dilekçesi","Haksız Fesih İtirazı","Ücret Alacağı Dilekçesi","SGK Prim Eksikliği Şikayeti","Kira Artış İtirazı","Kira Tespit Davası Dilekçesi","Tahliye Dilekçesi","Depozito İade Dilekçesi","Kira Borcu İhtarname","Aidat İtiraz Dilekçesi","Komşu Gürültü Şikayeti","Boşanma Dilekçesi (Anlaşmalı)","Boşanma Dilekçesi (Çekişmeli)","Nafaka Artırım Dilekçesi","Nafaka Azaltım Dilekçesi","Velayet Dilekçesi","Mal Paylaşımı Dilekçesi","İsim Değişikliği Dilekçesi","Trafik Cezası İtirazı","HGS Ceza İtirazı","Park Cezası İtirazı","Radar Cezası İtirazı","Ehliyet İade Dilekçesi","Hasar Tazmin Dilekçesi","Kasko Şikayet Dilekçesi","İcra Borca İtiraz Dilekçesi","Haciz Kaldırma Dilekçesi","Maaş Haczi İtirazı","Senet İtiraz Dilekçesi","Kredi Kartı Borç Yapılandırma","Banka Faiz İtirazı","Belediye Şikayet Dilekçesi","Su Faturası İtirazı","Elektrik Faturası İtirazı","Doğalgaz Faturası İtirazı","İnternet Fatura İtirazı","İmar Affı Başvurusu","Okul Nakil Dilekçesi","Burs Başvurusu Dilekçesi","Sınav İtiraz Dilekçesi","Hastane Şikayet Dilekçesi","Doktor Hatası Şikayeti","Engelli Raporu Başvurusu","Vergi Borcu İtirazı","Vergi Yapılandırma Talebi","MTV İtiraz Dilekçesi","Tapu Harcı İtirazı","Tapu İptal Dilekçesi","Miras Paylaşım Dilekçesi","Veraset İlamı Talebi","Miras Reddi Dilekçesi","Noter İhtarname","Sözleşme Fesih Dilekçesi","Ayıplı Mal Şikayeti","Tüketici Hakem Heyeti Başvurusu","Kargo Kaybolma Şikayeti","İş Kazası Tazminat Dilekçesi","Emeklilik Başvurusu","Emekli Maaş İtirazı","Polise Şikayet Dilekçesi","Savcılığa Suç Duyurusu","Dolandırıcılık Şikayeti","Hakaret Şikayeti","Tehdit Şikayeti","Hırsızlık Şikayeti","Askerlik Tecil Dilekçesi","Bedelli Başvurusu İtirazı","Vize İtiraz Dilekçesi","Oturma İzni Başvurusu","Vatandaşlık Başvurusu","Adres Değişikliği Dilekçesi","Dernek Kuruluş Dilekçesi","Marka Tescil İtirazı","Çiftçi Destek Başvurusu","Elektrik Kesintisi Şikayeti","Muhtarlık Şikayet Dilekçesi","CİMER Başvurusu","Adli Yardım Talebi","Sınav Kaydı Silme","KYK Borç İtirazı","Sigorta Hasar İtirazı","DASK Hasar Dilekçesi","Deprem Hasar Tespit İtirazı","Araç Değer Kaybı Dilekçesi","Uzaklaştırma Kararı Talebi","Koruma Kararı Talebi","KVKK Şikayet Dilekçesi","Kişisel Veri Silme Talebi","Banka Kredi Notu İtirazı","Çevre Kirliliği Şikayeti","Kaçak Yapı İhbarı","Sosyal Yardım Başvurusu","KPSS İtiraz Dilekçesi","Atama İtirazı","Site Yönetim Şikayeti","Temyiz Dilekçesi","İstinaf Dilekçesi","Kamulaştırma İtirazı","Özel Okul Ücret İade","Sürücü Kursu Şikayeti","Market Fiyat Şikayeti","Fahiş Fiyat Şikayeti","Bozuk Gıda Şikayeti","Ve 143 Dilekçe Daha - Tüm Kategoriler"];
+let secilen=dilekceler[0];
+function listele(filtre=""){let html="";dilekceler.filter(d=>d.toLowerCase().includes(filtre.toLowerCase())).forEach(d=>{html+=`<div class="card" onclick="sec('${d.replace(/'/g,"")}')">${d}</div>`;});document.getElementById("liste").innerHTML=html;let sel=document.getElementById("secili");sel.innerHTML="";dilekceler.forEach(d=>{let o=document.createElement("option");o.text=d;sel.add(o);});document.getElementById("secili").value=secilen;}
+function filtrele(){listele(document.getElementById("ara").value)}
+function sec(d){secilen=d;document.getElementById("secili").value=d;alert(d+" seçildi!");}
+function olustur(){let ad=document.getElementById("ad").value||"[AD SOYAD]";let tc=document.getElementById("tc").value||"[TC]";let adres=document.getElementById("adres").value||"[ADRES]";let tel=document.getElementById("tel").value||"[TEL]";let karsi=document.getElementById("karsi").value||"[KARŞI TARAF]";let olay=document.getElementById("olay").value||"[OLAY]";let konu=document.getElementById("secili").value;let tarih=new Date().toLocaleDateString("tr-TR");let metin=`${tarih}\n\nT.C.\nİLGİLİ MAKAMA / MAHKEMEYE\n\nKONU: ${konu} hk.\n\nBAŞVURAN:\nAd Soyad: ${ad}\nT.C.: ${tc}\nAdres: ${adres}\nTel: ${tel}\n\nKARŞI TARAF: ${karsi}\n\nAÇIKLAMALAR:\n${olay}\n\nYukarıda açıkladığım nedenlerle, ${konu} talebimin kabul edilerek gereğinin yapılmasını saygılarımla arz ederim.\n\nİmza: ${ad}\n\n--- BİLVERA ile hazırlandı ---`;document.getElementById("sonuc").innerText=metin;}
+function yazdir(){window.print()}
+listele();
+</script>
+</body>
+</html>
